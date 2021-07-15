@@ -78,8 +78,8 @@ def count_df(t_min=t0, t_max=t1):
 
         pvr += df
 
-    # NUMBER OF UNIQUE INITIAL IDS MUST MATCH WITH VEHICLE REQUIREMENT
-    if len(set(initial_ids)) == pvr:
+    # ALL INITIAL IDS MUST BE UNIQUE AND MUST MATCH WITH THE VEHICLE REQUIREMENT
+    if len(set(initial_ids)) == len(initial_ids) == pvr:
         return initial_ids
 
 
