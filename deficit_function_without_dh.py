@@ -81,6 +81,9 @@ def count_df(t_min=t0, t_max=t1):
     # ALL INITIAL IDS MUST BE UNIQUE AND MUST MATCH WITH THE VEHICLE REQUIREMENT
     if len(set(initial_ids)) == len(initial_ids) == pvr:
         return initial_ids
+    else:
+        raise ValueError('Not able to create correct initial IDs.')
+         
 
 
 def construct_blocks():
