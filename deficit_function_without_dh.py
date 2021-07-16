@@ -38,11 +38,8 @@ terminals = {'Terminal A': {'min_interval': 40},
              'Terminal C': {'min_interval': 20},
              'Terminal D': {'min_interval': 30}}
 
-t0 = min(x['dep_time'] for x in trips.values())
-t1 = max(x['arr_time'] for x in trips.values())
 
-
-def count_df(t_min=t0, t_max=t1):
+def count_df():
 
     # TOTAL PEAK VEHICLE REQUIREMENT
     pvr = 0
@@ -57,25 +54,31 @@ def count_df(t_min=t0, t_max=t1):
 
         dep_times = sorted(v['dep_time'] for k, v in trips.items() if v['dep_city'] == t)
         arr_times = sorted(v['arr_time'] for k, v in trips.items() if v['arr_city'] == t)
+         
+        dep_minutes = sorted(set(dep_times))
 
-        for minute in range(t_min, t_max+1):
+        for dep_minute in dep_minutes:
 
-            # DEFICIT BY MINUTE
-            dep_amount = len(list(filter(lambda x: x <= minute, dep_times)))
-            arr_amount = len(list(filter(lambda x: x <= minute - terminals[t]['min_interval'], arr_times)))
+            # DEFICIT BY DEPARTURE MINUTE
+            dep_amount = len(list(filter(lambda x: x <= dep_minute, dep_times)))
+            arr_amount = len(list(filter(lambda x: x <= dep_minute - terminals[t]['min_interval'], arr_times)))
+         
+            # DEPARTURES BY MINUTE AND INCREASE REQUIREMENT ARE NOT NECESSARILY THE SAME
             difference = dep_amount - arr_amount
+            add_amount = difference - df
 
-            # IF DEFICIT EXCEEDS PREVIOUS MAX, VEHICLE REQUIREMENT INCREASES
-            if difference > df:
-                # DEPARTURES BY MINUTE AND INCREASE REQUIREMENT ARE NOT NECESSARILY THE SAME
-                add_amount = difference - df
+            # IF DIFFERENCE BETWEEN DEPARTURES AND ARRIVALS IS GREATER THAN PREVIOUS MAX, VEHICLE REQUIREMENT INCREASES
+            if add_amount > 0:
+
                 # SORTING IS OPTIONAL
-                trip_ids = sorted(list(k for k, v in trips.items() if v['dep_city'] == t and v['dep_time'] == minute),
-                                  key=lambda x: trips[x]['arr_time'] - trips[x]['dep_time'], reverse=True)
+                trip_ids = sorted((k for k, v in trips.items() if v['dep_city'] == t and v['dep_time'] == dep_minute),
+                                   key=lambda x: trips[x]['arr_time'] - trips[x]['dep_time'], reverse=True)
                 initial_ids.extend(trip_ids[:add_amount])
 
-                df = difference
+                # NEW VEHICLE REQUIREMENT IS ADDED TO THE PREVIOUS DEFICIT
+                df += add_amount
 
+        # TERMINAL DEFICIT IS ADDED TO THE PEAK VEHICLE REQUIREMENT
         pvr += df
 
     # ALL INITIAL IDS MUST BE UNIQUE AND MUST MATCH WITH THE VEHICLE REQUIREMENT
@@ -84,7 +87,6 @@ def count_df(t_min=t0, t_max=t1):
     else:
         raise ValueError('Not able to create correct initial IDs.')
          
-
 
 def construct_blocks():
 
